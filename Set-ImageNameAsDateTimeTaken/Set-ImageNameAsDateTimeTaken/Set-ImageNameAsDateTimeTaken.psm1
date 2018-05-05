@@ -43,31 +43,39 @@ function GetDateAndTimeFromImage($imagePath)
     	$strSecond = [String]::Join('',$arSecond)  
     	$TimeTaken = $strHour + "." + $strMinute + "." + $strSecond
 
+	$image.Dispose()
     	$FullDate = $DateTaken + "_" + $TimeTaken
 	return $FullDate
 }
 
-function ProcessImage($imagePath,$resultDirectory)
+function ProcessImage($imagePath,$resultDirectory,$Replace)
 {
 	$destinationName=GetDateAndTimeFromImage $imagePath
 	$resultFullPath=Join-Path $resultDirectory $destinationName".jpg"
-	Copy-Item -Path $imagePath -Destination $resultFullPath
+	if ($Replace)
+	{
+		Rename-Item -Path $imagePath -NewName $resultFullPath
+	}
+	else
+	{
+		Copy-Item -Path $imagePath -Destination $resultFullPath
+	}
 }
 
-function ProcessDirectory($source, $destination, $recurse)
+function ProcessDirectory($source, $destination,$Replace,$recurse)
 {
 	$images=Get-ChildItem  -Filter "*.jpg" -Path $source 
 
 	foreach($image in $images)
 	{
 		$imagePath=$image.FullName
-		ProcessImage $imagePath $destination
+		ProcessImage $imagePath $destination $Replace
 	}
 }
 
 function Set-ImageNameAsDateTimeTaken{
 	[cmdletbinding()]
-	param ([string]$directory, [switch]$Recurse)
+	param ([string]$directory, [switch]$Replace, [switch]$Recurse)
 
 	[reflection.assembly]::loadfile( "C:\Windows\Microsoft.NET\Framework\v2.0.50727\System.Drawing.dll")
 
@@ -75,6 +83,14 @@ function Set-ImageNameAsDateTimeTaken{
 	{
 		$directory=Get-Location
 	}
-	$resultDirectory=CreateGetResultDirectory $directory
-	ProcessDirectory $directory $resultDirectory $false
+	
+	if ($Replace.IsPresent)
+	{
+		$resultDirectory=$directory
+	}
+	else
+	{
+		$resultDirectory=CreateGetResultDirectory $directory
+	}
+	ProcessDirectory $directory $resultDirectory $Replace $false
 }
