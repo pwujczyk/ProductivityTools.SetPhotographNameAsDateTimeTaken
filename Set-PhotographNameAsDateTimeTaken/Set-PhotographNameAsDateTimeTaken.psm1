@@ -140,7 +140,7 @@ function Set-PhotographNameAsDateTimeTaken{
 	[cmdletbinding()]
 	param ([string]$Directory, [switch]$Replace, [switch]$Recurse)
 	Write-Verbose "Loading system drawing assembly"
-	[reflection.assembly]::loadfile( "C:\Windows\Microsoft.NET\Framework\v2.0.50727\System.Drawing.dll")
+	[reflection.assembly]::loadfile( "C:\Windows\Microsoft.NET\Framework\v2.0.50727\System.Drawing.dll") |Out-Null
 
 	$startDirectory=$Directory
 	if ($Directory -eq $null -or $Directory -eq "")
