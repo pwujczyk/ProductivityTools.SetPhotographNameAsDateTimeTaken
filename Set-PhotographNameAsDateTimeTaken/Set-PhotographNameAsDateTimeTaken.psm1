@@ -32,49 +32,61 @@ function CreateGetResultDirectory()
 
 function GetDateAndTimeFromImage($imagePath)
 {
-	$path=$image.FullName
-	$image = New-Object System.Drawing.Bitmap("$imagePath")
-    $date = $image.GetPropertyItem(36867).value[0..9]
-    $arYear = [Char]$date[0],[Char]$date[1],[Char]$date[2],[Char]$date[3]  
-    $arMonth = [Char]$date[5],[Char]$date[6]  
-    $arDay = [Char]$date[8],[Char]$date[9]  
-    $strYear = [String]::Join('',$arYear)  
-    $strMonth = [String]::Join('',$arMonth)   
-    $strDay = [String]::Join('',$arDay)  
-    $DateTaken =$strYear+"."+$strMonth + "." + $strDay
-    
-    $time = $image.GetPropertyItem(36867).value[11..18]
-    $arHour = [Char]$time[0],[Char]$time[1]
-    $arMinute = [Char]$time[3],[Char]$time[4]  
-    $arSecond = [Char]$time[6],[Char]$time[7]  
-    $strHour = [String]::Join('',$arHour)  
-    $strMinute = [String]::Join('',$arMinute)   
-    $strSecond = [String]::Join('',$arSecond)  
-    $TimeTaken = $strHour + "." + $strMinute + "." + $strSecond
+    $image = New-Object System.Drawing.Bitmap("$imagePath")
+    try{
+	    $date = $image.GetPropertyItem(36867).value[0..9]
+	    $arYear = [Char]$date[0],[Char]$date[1],[Char]$date[2],[Char]$date[3]  
+	    $arMonth = [Char]$date[5],[Char]$date[6]  
+	    $arDay = [Char]$date[8],[Char]$date[9]  
+	    $strYear = [String]::Join('',$arYear)  
+	    $strMonth = [String]::Join('',$arMonth)   
+	    $strDay = [String]::Join('',$arDay)  
+	    $DateTaken =$strYear+"."+$strMonth + "." + $strDay
+	    
+	    $time = $image.GetPropertyItem(36867).value[11..18]
+	    $arHour = [Char]$time[0],[Char]$time[1]
+	    $arMinute = [Char]$time[3],[Char]$time[4]  
+	    $arSecond = [Char]$time[6],[Char]$time[7]  
+	    $strHour = [String]::Join('',$arHour)  
+	    $strMinute = [String]::Join('',$arMinute)   
+	    $strSecond = [String]::Join('',$arSecond)  
+	    $TimeTaken = $strHour + "." + $strMinute + "." + $strSecond
+	    $FullDate = $DateTaken + "_" + $TimeTaken
+     }
+	catch
+	{
+		$FullDate=(Get-ChildItem $imagePath).BaseName
+		Write-Error "Date taken haven't been found, probably picture is image (doesn't have the date taken property) Name set as [$FullDate]"
+	}
 
 	$image.Dispose()
-    $FullDate = $DateTaken + "_" + $TimeTaken
+     
 	return $FullDate
 }
 
-function ProcessImage($imagePath,$resultDirectory,$Replace)
+function ProcessImage()
 {
+	[cmdletbinding()]
+	param ([string]$imagePath,[string]$resultDirectory,[bool]$replace)
+	
 	$destinationName=GetDateAndTimeFromImage $imagePath
 	$resultFullPath=Join-Path $resultDirectory $destinationName".jpg"
 	if ($Replace)
 	{
+		Write-Verbose "Renaming file from [$imagePath] to [$resultFullPath]"
 		Rename-Item -Path $imagePath -NewName $resultFullPath
 	}
 	else
 	{
+		Write-Verbose "Copying file from [$imagePath] to [$resultFullPath]"
 		Copy-Item -Path $imagePath -Destination $resultFullPath
 	}
 }
 
-function CreateSubDirectory($startDirectory,$source)
+function CreateSubDirectory([string]$startDirectory,[string]$source)
 {
 	$mainDestPath=GerResultDirectory $startDirectory
-	$targetSubDir=$source.FullName.Replace($startDirectory,$mainDestPath)
+	$targetSubDir=$source.Replace($startDirectory,$mainDestPath)
 	if (Test-Path $targetSubDir)
 	{
 		throw "Tareg subresult directory [$targetSubDir] exists, please remove it."	
@@ -86,9 +98,13 @@ function CreateSubDirectory($startDirectory,$source)
 	}
 }
 
-function ProcessDirectory($startDirectory,$source,$Replace,$recurse)
+function ProcessDirectory()
 {
-
+	[cmdletbinding()]
+	param ([string]$startDirectory,[string]$source,[bool]$replace,[bool]$recurse)
+	
+	Write-Verbose "Processing directory [$source] in the mode Replace:[$replace] Recurse:[$replace]"
+	
 	if ($Replace -eq $true)
 	{
 		$destination=$source
@@ -120,10 +136,10 @@ function ProcessDirectory($startDirectory,$source,$Replace,$recurse)
 	}
 }
 
-function Set-ImageNameAsDateTimeTaken{
+function Set-PhotographNameAsDateTimeTaken{
 	[cmdletbinding()]
 	param ([string]$Directory, [switch]$Replace, [switch]$Recurse)
-
+	Write-Verbose "Loading system drawing assembly"
 	[reflection.assembly]::loadfile( "C:\Windows\Microsoft.NET\Framework\v2.0.50727\System.Drawing.dll")
 
 	$startDirectory=$Directory
@@ -131,14 +147,7 @@ function Set-ImageNameAsDateTimeTaken{
 	{
 		$startDirectory=Get-Location
 	}
-	
-#	if ($Replace.IsPresent)
-#	{
-#		$resultDirectory=$directory
-#	}
-#	else
-#	{
-#		#$resultDirectory=CreateGetResultDirectory $directory
-#	}
-	ProcessDirectory $startDirectory $startDirectory $Replace $false
+	ProcessDirectory $startDirectory $startDirectory $Replace $Recurse
 }
+
+Export-ModuleMember Set-PhotographNameAsDateTimeTaken
