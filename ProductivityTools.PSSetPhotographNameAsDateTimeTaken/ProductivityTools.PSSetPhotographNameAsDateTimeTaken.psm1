@@ -74,12 +74,12 @@ function ProcessImage()
 	if ($Replace)
 	{
 		Write-Verbose "Renaming file from [$imagePath] to [$resultFullPath]"
-		Rename-Item -Path $imagePath -NewName $resultFullPath
+		Rename-Item -LiteralPath $imagePath -NewName $resultFullPath
 	}
 	else
 	{
 		Write-Verbose "Copying file from [$imagePath] to [$resultFullPath]"
-		Copy-Item -Path $imagePath -Destination $resultFullPath
+		Copy-Item -LiteralPath $imagePath -Destination $resultFullPath
 	}
 }
 
@@ -121,7 +121,7 @@ function ProcessDirectory()
 		}
 	}
 	
-	$images=Get-ChildItem  -Filter "*.jpg" -Path $source 
+	$images=Get-ChildItem  -Filter "*.jpg" -LiteralPath $source 
 	foreach($image in $images)
 	{
 		$imagePath=$image.FullName
