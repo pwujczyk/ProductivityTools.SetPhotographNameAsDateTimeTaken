@@ -29,8 +29,8 @@
   <ItemGroup />
   <ItemGroup>
     <Compile Include="Runner.ps1" />
-    <Compile Include="ProductivityTools.PSSetPhotographNameAsDateTimeTaken.psd1" />
-    <Compile Include="ProductivityTools.PSSetPhotographNameAsDateTimeTaken.psm1" />
+    <Compile Include="ProductivityTools.SetPhotographNameAsDateTimeTaken.psd1" />
+    <Compile Include="ProductivityTools.SetPhotographNameAsDateTimeTaken.psm1" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Target Name="Build" />

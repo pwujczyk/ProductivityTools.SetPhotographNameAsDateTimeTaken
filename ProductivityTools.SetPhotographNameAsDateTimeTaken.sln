@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27428.2037
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30002.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F5034706-568F-408A-B7B3-4D38C6DB8A32}") = "ProductivityTools.PSSetPhotographNameAsDateTimeTaken", "ProductivityTools.SetPhotographNameAsDateTimeTaken\ProductivityTools.PSSetPhotographNameAsDateTimeTaken.pssproj", "{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}"
+Project("{F5034706-568F-408A-B7B3-4D38C6DB8A32}") = "ProductivityTools.SetPhotographNameAsDateTimeTaken", "ProductivityTools.SetPhotographNameAsDateTimeTaken\ProductivityTools.SetPhotographNameAsDateTimeTaken.pssproj", "{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
