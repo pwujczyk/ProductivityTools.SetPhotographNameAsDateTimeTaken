@@ -32,7 +32,8 @@ function CreateGetResultDirectory()
 
 function GetDateAndTimeFromImage($imagePath)
 {
-    $image = [System.Drawing.Bitmap]::new($(Resolve-Path $imagePath))
+    $rPath=Resolve-Path $imagePath
+    $image = [System.Drawing.Bitmap]::new($imagePath)
     try{
         $date = $image.GetPropertyItem(36867).value[0..9]
         $arYear = [Char]$date[0],[Char]$date[1],[Char]$date[2],[Char]$date[3]  
@@ -141,6 +142,7 @@ function Set-PhotographNameAsDateTimeTaken{
     param ([string]$Directory, [switch]$Replace, [switch]$Recurse)
     Write-Verbose "Loading system drawing assembly"
     # [reflection.assembly]::loadfile( "C:\Windows\Microsoft.NET\Framework\v2.0.50727\System.Drawing.dll") | Out-Null
+    Add-Type -AssemblyName System.Drawing
 
     $startDirectory=$Directory
     if ($Directory -eq $null -or $Directory -eq "")
