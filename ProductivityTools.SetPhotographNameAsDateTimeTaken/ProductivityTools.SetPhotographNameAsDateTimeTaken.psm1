@@ -61,8 +61,6 @@ function GetDateAndTimeFromImage($imagePath) {
 
 function GetResultPath([string]$resultDirectory, [string]$destinationName, [string]$suffix) {
     $result = Join-Path $resultDirectory $destinationName$suffix".jpg"
-    Write-Host "GetResultPath"
-    Write-Host $result
     return $result;
 }
 
@@ -72,8 +70,7 @@ function SuffixDateIfMultiplePhotosAtTheSameSecond([string]$resultDirectory, [st
         $index = 0;
         $suffix = "_" + $index
         $path = GetResultPath $resultDirectory $destinationName $suffix
-        Write-Host "destination path"
-        Write-Host $path
+        Write-Verbose "Two pictures in the same second"
         while (Test-Path $path) {
             $index++;
             $suffix = "_" + $index
