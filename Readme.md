@@ -17,6 +17,8 @@ Module extracts date and time from picture and change name of the picture to it.
 <!--more-->
 Module allows to use -Recurse switch. By default it creates directory at the same level as working directory with images which have new name.
 
+If two photos had been performed in the same second, module will append suffix _0 _1,....
+
 ````powershell
 Set-PhotographNameAsDateTimeTaken -Recurse -Verbose
 ````
