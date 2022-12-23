@@ -1,62 +1,56 @@
-function GerResultDirectory()
-{
+function GerResultDirectory() {
     [cmdletbinding()]
     param ([string]$directory)
     
-    $path=Split-Path -Path $directory
-    $directoryName=Split-Path $directory -leaf
+    $path = Split-Path -Path $directory
+    $directoryName = Split-Path $directory -leaf
 
-    $resultName="_Result"
-    $resultPath=Join-Path "$path" $directoryName$resultName
+    $resultName = "_Result"
+    $resultPath = Join-Path "$path" $directoryName$resultName
     return $resultPath
 }
 
-function CreateGetResultDirectory()
-{
+function CreateGetResultDirectory() {
     [cmdletbinding()]
     param ([string]$directory)
     
-    $resultPath=GerResultDirectory $directory
+    $resultPath = GerResultDirectory $directory
     
     Write-Verbose "The result of the script will be placed in the directory: [$resultPath]"
-    if (Test-Path $resultPath)
-    {
+    if (Test-Path $resultPath) {
         throw "Result directory [$resultPath] exists, please remove it."    
     }
-    else
-    {
-        New-Item -ItemType directory -Path $resultPath |Out-Null
+    else {
+        New-Item -ItemType directory -Path $resultPath | Out-Null
         return $resultPath
     }
 }
 
-function GetDateAndTimeFromImage($imagePath)
-{
-    $rPath=Resolve-Path $imagePath
+function GetDateAndTimeFromImage($imagePath) {
+    $rPath = Resolve-Path $imagePath
     $image = [System.Drawing.Bitmap]::new($imagePath)
-    try{
+    try {
         $date = $image.GetPropertyItem(36867).value[0..9]
-        $arYear = [Char]$date[0],[Char]$date[1],[Char]$date[2],[Char]$date[3]  
-        $arMonth = [Char]$date[5],[Char]$date[6]  
-        $arDay = [Char]$date[8],[Char]$date[9]  
-        $strYear = [String]::Join('',$arYear)  
-        $strMonth = [String]::Join('',$arMonth)   
-        $strDay = [String]::Join('',$arDay)  
-        $DateTaken =$strYear+"."+$strMonth + "." + $strDay
+        $arYear = [Char]$date[0], [Char]$date[1], [Char]$date[2], [Char]$date[3]  
+        $arMonth = [Char]$date[5], [Char]$date[6]  
+        $arDay = [Char]$date[8], [Char]$date[9]  
+        $strYear = [String]::Join('', $arYear)  
+        $strMonth = [String]::Join('', $arMonth)   
+        $strDay = [String]::Join('', $arDay)  
+        $DateTaken = $strYear + "." + $strMonth + "." + $strDay
         
         $time = $image.GetPropertyItem(36867).value[11..18]
-        $arHour = [Char]$time[0],[Char]$time[1]
-        $arMinute = [Char]$time[3],[Char]$time[4]  
-        $arSecond = [Char]$time[6],[Char]$time[7]  
-        $strHour = [String]::Join('',$arHour)  
-        $strMinute = [String]::Join('',$arMinute)   
-        $strSecond = [String]::Join('',$arSecond)  
+        $arHour = [Char]$time[0], [Char]$time[1]
+        $arMinute = [Char]$time[3], [Char]$time[4]  
+        $arSecond = [Char]$time[6], [Char]$time[7]  
+        $strHour = [String]::Join('', $arHour)  
+        $strMinute = [String]::Join('', $arMinute)   
+        $strSecond = [String]::Join('', $arSecond)  
         $TimeTaken = $strHour + "." + $strMinute + "." + $strSecond
         $FullDate = $DateTaken + "_" + $TimeTaken
-     }
-    catch
-    {
-        $FullDate=(Get-ChildItem $imagePath).BaseName
+    }
+    catch {
+        $FullDate = (Get-ChildItem $imagePath).BaseName
         Write-Error "Date taken haven't been found, probably picture is image (doesn't have the date taken property) Name set as [$FullDate]"
     }
 
@@ -65,89 +59,104 @@ function GetDateAndTimeFromImage($imagePath)
     return $FullDate
 }
 
-function ProcessImage()
-{
+function GetResultPath([string]$resultDirectory, [string]$destinationName, [string]$suffix) {
+    $result = Join-Path $resultDirectory $destinationName$suffix".jpg"
+    Write-Host "GetResultPath"
+    Write-Host $result
+    return $result;
+}
+
+function SuffixDateIfMultiplePhotosAtTheSameSecond([string]$resultDirectory, [string]$destinationName) {
+    $resultFullPath = GetResultPath $resultDirectory $destinationName ""
+    if (Test-Path $resultFullPath) {
+        $index = 0;
+        $suffix = "_" + $index
+        $path = GetResultPath $resultDirectory $destinationName $suffix
+        Write-Host "destination path"
+        Write-Host $path
+        while (Test-Path $path) {
+            $index++;
+            $suffix = "_" + $index
+            $path = GetResultPath $resultDirectory $destinationName $suffix 
+        }
+        return $path 
+        
+    }
+    else {
+        return $resultFullPath
+    }
+}
+
+function ProcessImage() {
     [cmdletbinding()]
-    param ([string]$imagePath,[string]$resultDirectory,[bool]$replace)
+    param ([string]$imagePath, [string]$resultDirectory, [bool]$replace)
     
-    $destinationName=GetDateAndTimeFromImage $imagePath
-    $resultFullPath=Join-Path $resultDirectory $destinationName".jpg"
-    if ($Replace)
-    {
+    $destinationName = GetDateAndTimeFromImage $imagePath
+    $resultFullPath = SuffixDateIfMultiplePhotosAtTheSameSecond $resultDirectory $destinationName
+
+    if ($Replace) {
         Write-Verbose "Renaming file from [$imagePath] to [$resultFullPath]"
         Rename-Item -LiteralPath $imagePath -NewName $resultFullPath
     }
-    else
-    {
+    else {
         Write-Verbose "Copying file from [$imagePath] to [$resultFullPath]"
         Copy-Item -LiteralPath $imagePath -Destination $resultFullPath
     }
 }
 
-function CreateSubDirectory([string]$startDirectory,[string]$source)
-{
-    $mainDestPath=GerResultDirectory $startDirectory
-    $targetSubDir=$source.Replace($startDirectory,$mainDestPath)
-    if (Test-Path $targetSubDir)
-    {
+function CreateSubDirectory([string]$startDirectory, [string]$source) {
+    $mainDestPath = GerResultDirectory $startDirectory
+    $targetSubDir = $source.Replace($startDirectory, $mainDestPath)
+    if (Test-Path $targetSubDir) {
         throw "Tareg subresult directory [$targetSubDir] exists, please remove it."    
     }
-    else
-    {
-        New-Item -ItemType directory -Path $targetSubDir |Out-Null
+    else {
+        New-Item -ItemType directory -Path $targetSubDir | Out-Null
         return $targetSubDir
     }
 }
 
-function ProcessDirectory()
-{
+function ProcessDirectory() {
     [cmdletbinding()]
-    param ([string]$startDirectory,[string]$source,[bool]$replace,[bool]$recurse)
+    param ([string]$startDirectory, [string]$source, [bool]$replace, [bool]$recurse)
     
     Write-Verbose "Processing directory [$source] in the mode Replace:[$replace] Recurse:[$replace]"
     
-    if ($Replace -eq $true)
-    {
-        $destination=$source
+    if ($Replace -eq $true) {
+        $destination = $source
     }
-    else
-    {
-        if ($startDirectory -eq $source)
-        {
-            $destination=CreateGetResultDirectory $startDirectory
+    else {
+        if ($startDirectory -eq $source) {
+            $destination = CreateGetResultDirectory $startDirectory
         }
-        else
-        {
-            $destination=CreateSubDirectory $startDirectory $source
+        else {
+            $destination = CreateSubDirectory $startDirectory $source
         }
     }
     
-    $images=Get-ChildItem  -Filter "*.jpg" -LiteralPath $source 
-    foreach($image in $images)
-    {
-        $imagePath=$image.FullName
+    $images = Get-ChildItem  -Filter "*.jpg" -LiteralPath $source 
+    foreach ($image in $images) {
+        $imagePath = $image.FullName
         ProcessImage $imagePath $destination $Replace
     }
     
-    $dirs=Get-ChildItem -Path $source  | ?{ $_.PSIsContainer }
-    foreach($dir in $dirs)
-    {
-        $directoryFullName=$dir.FullName
+    $dirs = Get-ChildItem -Path $source  | ? { $_.PSIsContainer }
+    foreach ($dir in $dirs) {
+        $directoryFullName = $dir.FullName
         ProcessDirectory $startDirectory $directoryFullName $Replace $recurse
     }
 }
 
-function Set-PhotographNameAsDateTimeTaken{
+function Set-PhotographNameAsDateTimeTaken {
     [cmdletbinding()]
     param ([string]$Directory, [switch]$Replace, [switch]$Recurse)
     Write-Verbose "Loading system drawing assembly"
     # [reflection.assembly]::loadfile( "C:\Windows\Microsoft.NET\Framework\v2.0.50727\System.Drawing.dll") | Out-Null
     Add-Type -AssemblyName System.Drawing
 
-    $startDirectory=$Directory
-    if ($Directory -eq $null -or $Directory -eq "")
-    {
-        $startDirectory=Get-Location
+    $startDirectory = $Directory
+    if ($Directory -eq $null -or $Directory -eq "") {
+        $startDirectory = Get-Location
     }
     ProcessDirectory $startDirectory $startDirectory $Replace $Recurse
 }
